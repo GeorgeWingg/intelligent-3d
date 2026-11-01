@@ -1,6 +1,6 @@
 {
-  "at": "2026-11-01T15:44:06.803Z",
-  "page": "http://127.0.0.1:4330/voice-dev.html",
+  "at": "2026-11-01T16:35:55.300Z",
+  "page": "http://127.0.0.1:5320/voice-dev.html",
   "steps": [
     {
       "name": "page-loaded",
@@ -9,7 +9,7 @@
     {
       "name": "start-codex",
       "mode": "codex",
-      "ms": 7824,
+      "ms": 3868,
       "states": [
         {
           "s": "connecting"
@@ -27,39 +27,8 @@
           "remoteHasAudio": true
         }
       ]
-    },
-    {
-      "name": "server-status",
-      "threadIdPresent": true,
-      "accountType": "chatgpt",
-      "lastError": null
-    },
-    {
-      "name": "note",
-      "status": 200,
-      "body": {
-        "ok": true,
-        "role": "developer"
-      }
-    },
-    {
-      "name": "user-text",
-      "status": 200,
-      "body": {
-        "ok": true,
-        "role": "user"
-      }
-    },
-    {
-      "name": "after-note",
-      "log": [
-        "ai: It's neatly separated into five color-coded systems. Yep, loud and clear."
-      ],
-      "connectionStates": [
-        "connected"
-      ]
     }
   ],
-  "consoleErrors": [],
-  "result": "realtime-connected"
+  "result": "test-error",
+  "error": "fetch failed"
 }

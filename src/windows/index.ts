@@ -154,6 +154,7 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     return { cx: r.left + (x + 1) / 2 * r.width, cy: r.top + (1 - y) / 2 * r.height };
   };
   let dragging: Win | null = null;
+  let pulling: { el: HTMLElement; moved: number } | null = null;
   let hovered: Element | null = null;
 
   return {
@@ -167,7 +168,10 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
       const frame = el?.closest('.xr-window');
       if (!el || !frame) return false;
       const bar = el.closest('.xr-grab') as HTMLElement | null;
-      if (bar?.dataset.win) {
+      const flat = el.closest('.flat-card') as HTMLElement | null;
+      if (flat) {
+        pulling = { el: flat, moved: 0 };
+      } else if (bar?.dataset.win) {
         dragging = wins.get(bar.dataset.win) ?? null;
         bar.classList.add('active');
       } else {
@@ -175,8 +179,16 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
       }
       return true;
     },
-    pinchMove(dx, dy) { if (dragging) dragBy(dragging, dx, dy); },
+    pinchMove(dx, dy) {
+      if (pulling) {
+        pulling.moved += Math.hypot(dx, dy);
+        if (pulling.moved > 0.08) { pulling.el.dispatchEvent(new Event('flat-pull')); pulling = null; }
+        return;
+      }
+      if (dragging) dragBy(dragging, dx, dy);
+    },
     pinchEnd() {
+      pulling = null;
       dragging?.frame.querySelector('.xr-grab')?.classList.remove('active');
       dragging = null;
     },

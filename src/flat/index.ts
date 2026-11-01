@@ -15,8 +15,6 @@ export interface FlatCard {
 export function createFlatCard(): FlatCard {
   const el = document.createElement('div');
   el.className = 'flat-card';
-  el.setAttribute('role', 'button');
-  el.tabIndex = 0;
   const title = document.createElement('div');
   title.className = 'flat-title';
   const tabs = document.createElement('div');
@@ -95,15 +93,15 @@ export function createFlatCard(): FlatCard {
     }
   }
 
-  // Drag out (mouse) or click/pinch (hands go through windows.pinchStart, which clicks role=button).
+  // Only a drag pulls it out (mouse drag, or a pinch-and-pull with hands); a plain click does nothing.
   let down: { x: number; y: number } | null = null;
   const fire = () => { if (!pulled) pulls.forEach(cb => cb()); };
   el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
   el.addEventListener('pointermove', e => {
     if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 40) { down = null; fire(); }
   });
-  el.addEventListener('pointerup', () => { if (down) fire(); down = null; });
-  el.addEventListener('click', e => { if (e.detail === 0) fire(); }); // synthetic click from a pinch
+  el.addEventListener('pointerup', () => { down = null; });
+  el.addEventListener('flat-pull', fire); // a pinch that drags out of the window (see windows.pinchMove)
 
   return {
     el,

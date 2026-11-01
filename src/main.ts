@@ -117,16 +117,8 @@ function spawnControls(line: Extract<SpecLine, { t: 'controls' }>) {
 }
 function clearPanels() { panelIds.splice(0).forEach(id => windows.remove(id)); }
 
-// Voice orb floats above the chat window while voice is on.
-const orb = createOrb(0.07);
-orb.object.position.set(CHAT_POS.x + 0.04, CHAT_POS.y + 0.44, CHAT_POS.z);
-// The orb follows the chat window, sitting just right of the composer (WebGL draws under the windows layer).
-const orbOffset = new THREE.Vector3(0.3, -0.2, 0.02);
-scene.attach(orb.object, dt => {
-  const p = windows.position('chat');
-  if (p) orb.object.position.lerp(p.add(orbOffset), Math.min(1, dt * 8));
-  orb.update(dt);
-});
+// No voice orb: the composer's own voice state is enough.
+const orb = { setLevel(_l: number) {}, setVisible(_on: boolean) {} };
 let level = 0;
 setInterval(() => { level *= 0.8; orb.setLevel(level); }, 60);
 

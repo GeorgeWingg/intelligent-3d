@@ -21,6 +21,7 @@ interface Win {
   obj: CSS3DObject;
   frame: HTMLElement;
   target: THREE.Vector3;
+  arc: { a: number; r: number; y: number }; // angle around the eye (0 = straight ahead, + = right), radius, height
   spawn: number; // 0..1 spawn progress
   from: THREE.Vector3;
 }
@@ -43,6 +44,15 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
   stage.appendChild(css.domElement);
   const world = new THREE.Scene();
   const wins = new Map<string, Win>();
+
+  // Windows live on a cylinder around the viewer's eye and always turn to face it, like headset panels.
+  const eye = () => scene.home.position;
+  const toArc = (p: THREE.Vector3) => {
+    const dx = p.x - eye().x, dz = eye().z - p.z;
+    return { a: Math.atan2(dx, dz), r: Math.max(0.6, Math.hypot(dx, dz)), y: p.y };
+  };
+  const fromArc = (arc: Win['arc'], out = new THREE.Vector3()) =>
+    out.set(eye().x + arc.r * Math.sin(arc.a), arc.y, eye().z - arc.r * Math.cos(arc.a));
 
   const resize = () => css.setSize(stage.clientWidth, stage.clientHeight);
   new ResizeObserver(resize).observe(stage);
@@ -73,6 +83,7 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
       } else {
         w.obj.position.lerp(w.target, Math.min(1, dt * 12));
       }
+      w.obj.rotation.y += (-w.arc.a - w.obj.rotation.y) * Math.min(1, dt * 12);
     }
     css.render(world, cam);
   });
@@ -91,12 +102,13 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     bar.dataset.win = o.id;
     frame.append(body, bar);
     const obj = new CSS3DObject(frame);
-    obj.rotation.y = o.yaw ?? 0;
+    const arc = toArc(o.position);
+    obj.rotation.y = -arc.a;
     const from = (o.from ?? o.position).clone();
     obj.position.copy(from);
     obj.scale.setScalar(PX * (o.from ? 0.25 : 1));
     world.add(obj);
-    const w: Win = { obj, frame, target: o.position.clone(), spawn: o.from ? 0 : 1, from };
+    const w: Win = { obj, frame, target: fromArc(arc), arc, spawn: o.from ? 0 : 1, from };
     if (!o.from) frame.style.opacity = '1';
     wins.set(o.id, w);
     attachMouseDrag(bar, w);
@@ -119,14 +131,14 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     });
   }
 
-  // NDC delta -> metres at the window's distance, moved in the window's own plane.
+  // NDC delta -> slide along the arc (horizontal) and up/down (vertical), keeping distance to the eye.
   function dragBy(w: Win, dx: number, dy: number) {
     const cam = scene.camera;
-    const dist = cam.position.distanceTo(w.target);
-    const h = 2 * dist * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
-    const right = new THREE.Vector3(Math.cos(w.obj.rotation.y), 0, -Math.sin(w.obj.rotation.y));
-    w.target.addScaledVector(right, dx * h * cam.aspect / 2);
-    w.target.y += dy * h / 2;
+    const vfov = THREE.MathUtils.degToRad(cam.fov);
+    const hfov = 2 * Math.atan(Math.tan(vfov / 2) * cam.aspect);
+    w.arc.a = THREE.MathUtils.clamp(w.arc.a + dx * hfov / 2, -1.4, 1.4);
+    w.arc.y += dy * Math.tan(vfov / 2) * w.arc.r;
+    fromArc(w.arc, w.target);
   }
 
   function remove(id: string) {

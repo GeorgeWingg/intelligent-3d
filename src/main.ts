@@ -6,7 +6,6 @@ import { bikeFixture } from './scene/bike-fixture';
 import { createHands } from './hands';
 import { createChat, setModeLine } from './chat';
 import { createVoice } from './voice';
-import { createOrb } from './orb';
 import { createWindows } from './windows';
 import { createFlatCard, type FlatCard } from './flat';
 import * as THREE from 'three';

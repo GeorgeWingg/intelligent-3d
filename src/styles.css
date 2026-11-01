@@ -76,3 +76,32 @@ video {
 ::selection {
   background: rgba(236, 236, 236, 0.2);
 }
+
+/* ?glasses=1 — frame the view as seen through AR glasses (simulated, labelled). */
+.glasses-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 52% 50% at 50% 50%, transparent 82%, rgba(0, 0, 0, 0.55) 92%, #000 100%);
+}
+.glasses-frame::after {
+  content: '';
+  position: absolute;
+  inset: 3vh 2.5vw;
+  border-radius: 48% 48% 44% 44% / 26% 26% 34% 34%;
+  box-shadow: 0 0 0 100vmax #000, inset 0 0 60px 20px rgba(0, 0, 0, 0.6);
+}
+.glasses-label {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 21;
+  font: 500 13px/18px -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, sans-serif;
+  color: #8f8f8f;
+  pointer-events: none;
+}
+
+.glasses-on .i3d-mode { z-index: 22; }

@@ -91,3 +91,9 @@
 .xr-controls button:hover,
 .xr-controls button.xr-hover { background: #3a3a3a; }
 .xr-controls button:active { transform: scale(0.96); }
+
+/* Chrome flickers and mis-clips nested scrolling layers inside CSS3D-transformed elements.
+   Keep each window one flat raster: no composited scroller, clip instead of hidden. */
+.xr-window { backface-visibility: hidden; will-change: transform; }
+.xr-window-body { overflow: clip; }
+.xr-window .i3d-scroll { overflow: hidden !important; }

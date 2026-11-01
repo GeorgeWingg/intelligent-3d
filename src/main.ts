@@ -14,12 +14,10 @@ import * as THREE from 'three';
 const params = new URLSearchParams(location.search);
 const stage = document.getElementById('stage')!;
 if (params.has('glasses')) {
-  const frame = document.createElement('div');
-  frame.className = 'glasses-frame';
   const label = document.createElement('div');
   label.className = 'glasses-label';
   label.textContent = 'Simulated AR glasses view';
-  document.body.append(frame, label);
+  document.body.append(label);
   document.body.classList.add('glasses-on');
 }
 const chat = createChat(document.getElementById('chat')!);

@@ -255,9 +255,29 @@ export function createScene(container: HTMLElement, opts: SceneOptions = {}): Sc
     videoTex.magFilter = THREE.LinearFilter;
     scene.background = videoTex;
   } else {
-    scene.background = new THREE.Color(BG);
-    scene.fog = new THREE.Fog(BG, 3.2, 9);
-    scene.add(grid);
+    // Virtual room: a soft horizon gradient and a lit floor pool, so space and depth read without passthrough.
+    const sky = document.createElement('canvas');
+    sky.width = 4; sky.height = 512;
+    const sg = sky.getContext('2d')!;
+    const g = sg.createLinearGradient(0, 0, 0, 512);
+    g.addColorStop(0, '#16181b'); g.addColorStop(0.5, '#2e3338'); g.addColorStop(0.56, '#262a2e'); g.addColorStop(1, '#0f1012');
+    sg.fillStyle = g; sg.fillRect(0, 0, 4, 512);
+    const skyTex = new THREE.CanvasTexture(sky);
+    skyTex.colorSpace = THREE.SRGBColorSpace;
+    scene.background = skyTex;
+    scene.fog = new THREE.Fog('#24282c', 4, 14);
+    const pool = document.createElement('canvas');
+    pool.width = pool.height = 256;
+    const pg = pool.getContext('2d')!;
+    const r = pg.createRadialGradient(128, 128, 0, 128, 128, 128);
+    r.addColorStop(0, 'rgba(120,128,138,0.55)'); r.addColorStop(0.45, 'rgba(70,76,84,0.35)'); r.addColorStop(1, 'rgba(30,32,36,0)');
+    pg.fillStyle = r; pg.fillRect(0, 0, 256, 256);
+    const poolTex = new THREE.CanvasTexture(pool);
+    poolTex.colorSpace = THREE.SRGBColorSpace;
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(9, 9), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, depthWrite: false }));
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = STAGE_POS.y - 0.37;
+    scene.add(floor);
   }
 
   // Stage -> turntable (user rotation/scale) -> assembly root -> system groups -> part meshes.

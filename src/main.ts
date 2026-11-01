@@ -64,7 +64,7 @@ const windows = createWindows(stage, scene);
 // Look slightly left so the chat window sits in view and the object sits right of centre.
 scene.home.position.x -= 0.32;
 scene.home.target.x -= 0.32;
-const CHAT_POS = new THREE.Vector3(-0.84, 1.2, 1.0);
+const CHAT_POS = new THREE.Vector3(-0.8, 1.31, 0.9);
 const chatEl = document.getElementById('chat')!;
 chatEl.classList.add('i3d-in-space');
 windows.add(chatEl, { id: 'chat', position: CHAT_POS, yaw: 0.34, width: 440, height: 620 });

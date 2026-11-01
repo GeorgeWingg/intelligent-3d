@@ -66,7 +66,11 @@ const pov = params.has('pov') ? params.get('pov') !== '0' : /iphone/i.test(camLa
 const mirror = !pov;
 if (video) mode.camera += pov ? ' (POV)' : ' (mirrored)';
 showMode();
-const scene = createScene(stage, { video: video ?? undefined, mirror });
+// ?room=virtual: the camera only drives hand tracking; the view is a virtual room, not passthrough.
+const virtualRoom = params.get('room') === 'virtual';
+if (virtualRoom && video) mode.camera = 'Virtual room · camera used for hand tracking only';
+showMode();
+const scene = createScene(stage, { video: virtualRoom ? undefined : video ?? undefined, mirror });
 
 // The chat is the main window, floating front-left; everything the model makes spawns out of it.
 const windows = createWindows(stage, scene);
@@ -121,6 +125,9 @@ orb.object.position.set(CHAT_POS.x + 0.04, CHAT_POS.y + 0.44, CHAT_POS.z);
 scene.attach(orb.object, dt => orb.update(dt));
 let level = 0;
 setInterval(() => { level *= 0.8; orb.setLevel(level); }, 60);
+
+// The hidden camera element still needs to be in the DOM for frame callbacks in some browsers.
+if (video && virtualRoom) { video.style.cssText = 'position:fixed;width:2px;height:2px;opacity:0;pointer-events:none'; document.body.appendChild(video); }
 
 // Hands: MediaPipe on the same camera feed, mapped through the same cover-fit as the background.
 if (video) {

@@ -5,3 +5,4 @@ dist
 evidence/raw
 public/mediapipe-wasm/
 .DS_Store
+.claude/

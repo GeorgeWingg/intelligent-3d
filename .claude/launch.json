@@ -1,7 +1,0 @@
-{
-  "version": "0.0.1",
-  "configurations": [
-    { "name": "dev", "runtimeExecutable": "npx", "runtimeArgs": ["vite", "--port", "5320", "--strictPort"], "port": 5320 },
-    { "name": "server", "runtimeExecutable": "node", "runtimeArgs": ["server/index.mjs"], "port": 4320 }
-  ]
-}

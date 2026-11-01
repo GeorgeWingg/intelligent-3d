@@ -60,6 +60,33 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
 
   // Gentle head-motion parallax from the pointer or the hand, so depth reads in a flat recording.
   const look = { x: 0, y: 0, tx: 0, ty: 0 };
+  const home = scene.home.position.clone();
+  const dir = scene.home.target.clone().sub(home);
+  const yaw0 = Math.atan2(-dir.x, -dir.z);
+  const pitch0 = Math.atan2(dir.y, Math.hypot(dir.x, dir.z));
+  const walk = { pos: home.clone(), cur: home.clone(), yaw: yaw0, pitch: pitch0, curYaw: yaw0, curPitch: pitch0 };
+  const keys = new Set<string>();
+  const typing = () => { const a = document.activeElement; return !!a && (a.tagName === 'TEXTAREA' || a.tagName === 'INPUT'); };
+  window.addEventListener('keydown', e => {
+    if (typing()) return;
+    if (e.key === 'r' || e.key === 'R') { walk.pos.copy(home); walk.yaw = yaw0; walk.pitch = pitch0; return; }
+    keys.add(e.key.toLowerCase());
+    if (e.shiftKey) keys.add('shift');
+  });
+  window.addEventListener('keyup', e => { keys.delete(e.key.toLowerCase()); if (!e.shiftKey) keys.delete('shift'); });
+  window.addEventListener('blur', () => keys.clear());
+  window.addEventListener('contextmenu', e => { if ((e.target as Element).closest?.('#stage')) e.preventDefault(); });
+  let lookDrag: { x: number; y: number } | null = null;
+  window.addEventListener('pointerdown', e => {
+    if ((e.button === 2 || e.altKey) && !(e.target as Element).closest?.('.xr-window')) { lookDrag = { x: e.clientX, y: e.clientY }; e.preventDefault(); }
+  }, true);
+  window.addEventListener('pointermove', e => {
+    if (!lookDrag) return;
+    walk.yaw -= (e.clientX - lookDrag.x) * 0.004;
+    walk.pitch = THREE.MathUtils.clamp(walk.pitch - (e.clientY - lookDrag.y) * 0.004, -1.2, 1.2);
+    lookDrag = { x: e.clientX, y: e.clientY };
+  }, true);
+  window.addEventListener('pointerup', () => { lookDrag = null; }, true);
   const sway = new URLSearchParams(location.search).has('sway');
   if (sway) window.addEventListener('pointermove', e => {
     look.tx = (e.clientX / innerWidth) * 2 - 1;
@@ -71,8 +98,21 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     look.x += (look.tx - look.x) * Math.min(1, dt * 3);
     look.y += (look.ty - look.y) * Math.min(1, dt * 3);
     const cam = scene.camera;
-    cam.position.copy(scene.home.position).add(new THREE.Vector3(look.x * 0.18, -look.y * 0.08, 0));
-    cam.lookAt(scene.home.target);
+    // First-person walk: W/A/S/D (or arrows) move, Q/E down/up, right-drag or Alt-drag looks around.
+    const sp = (keys.has('shift') ? 2.2 : 1.1) * dt;
+    const fwd = new THREE.Vector3(-Math.sin(walk.yaw), 0, -Math.cos(walk.yaw));
+    const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
+    if (keys.has('w') || keys.has('arrowup')) walk.pos.addScaledVector(fwd, sp);
+    if (keys.has('s') || keys.has('arrowdown')) walk.pos.addScaledVector(fwd, -sp);
+    if (keys.has('d') || keys.has('arrowright')) walk.pos.addScaledVector(right, sp);
+    if (keys.has('a') || keys.has('arrowleft')) walk.pos.addScaledVector(right, -sp);
+    if (keys.has('e')) walk.pos.y += sp * 0.6;
+    if (keys.has('q')) walk.pos.y -= sp * 0.6;
+    walk.cur.lerp(walk.pos, Math.min(1, dt * 10));
+    walk.curYaw += (walk.yaw - walk.curYaw) * Math.min(1, dt * 12);
+    walk.curPitch += (walk.pitch - walk.curPitch) * Math.min(1, dt * 12);
+    cam.position.copy(walk.cur).add(new THREE.Vector3(look.x * 0.18, -look.y * 0.08, 0));
+    cam.rotation.set(walk.curPitch, walk.curYaw, 0, 'YXZ');
     for (const w of wins.values()) {
       if (w.spawn < 1) {
         w.spawn = Math.min(1, w.spawn + dt / 0.65);

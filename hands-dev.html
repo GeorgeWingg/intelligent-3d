@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Hands Dev</title>
+    <style>
+      html, body { margin: 0; background: #0e0f08; color: #e9dec4; font-family: Newsreader, Georgia, serif; }
+      #view { position: relative; width: 720px; height: 480px; overflow: hidden; background: #1d1d14; }
+      #view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+      #log { padding: 12px 16px; font-size: 15px; white-space: pre-wrap; color: #8b856b; }
+    </style>
+  </head>
+  <body>
+    <div id="view"><video id="video" muted playsinline autoplay></video></div>
+    <div id="log"></div>
+    <script type="module" src="/src/hands/dev.ts"></script>
+  </body>
+</html>

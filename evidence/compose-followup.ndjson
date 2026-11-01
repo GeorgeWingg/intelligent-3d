@@ -1,0 +1,4 @@
+{"t":"action","action":{"op":"focus","system":"brakes"}}
+{"t":"panel","id":"brakes-note","title":"Brake system","body":"The handlebar levers pull cables that close the front and rear calipers, pressing pads against the wheel rims to slow the bike.","anchor":"brakes"}
+{"t":"say","text":"Here are the brakes. Each lever tensions a cable, squeezing two pads against a wheel rim; the front brake provides most of the stopping force, while the rear helps control and stabilize the bike."}
+{"t":"done"}

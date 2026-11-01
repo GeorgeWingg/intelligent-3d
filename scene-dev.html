@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scene harness</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #0e0f08; color: #e9dec4; font-family: Newsreader, Georgia, serif; }
+      #stage { position: fixed; inset: 0; }
+      #bar { position: fixed; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 5; }
+      #bar button { font: inherit; font-size: 14px; color: #e9dec4; background: #2f2e1e; border: 1px solid rgba(233,222,196,.15); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+      #desc { position: fixed; left: 12px; bottom: 12px; max-width: 560px; font-size: 12px; color: #8b856b; white-space: pre-wrap; z-index: 5; }
+    </style>
+  </head>
+  <body>
+    <div id="stage"></div>
+    <div id="bar">
+      <button data-a="replay">Replay</button>
+      <button data-a="explode">Explode</button>
+      <button data-a="assemble">Assemble</button>
+      <button data-a="brakes">Focus brakes</button>
+      <button data-a="unfocus">Unfocus</button>
+      <button data-a="rotate">Rotate</button>
+      <button data-a="reset">Reset</button>
+    </div>
+    <div id="desc"></div>
+    <script type="module">
+      import { createScene } from '/src/scene/index.ts';
+      import { bikeFixture } from '/src/scene/bike-fixture.ts';
+      const q = new URLSearchParams(location.search);
+      const scene = createScene(document.getElementById('stage'));
+      const desc = document.getElementById('desc');
+      let timer = null;
+      function replay(delay) {
+        clearTimeout(timer);
+        scene.clear();
+        let i = 0;
+        const step = () => {
+          if (i >= bikeFixture.length) { finish(); return; }
+          scene.apply(bikeFixture[i++]);
+          timer = setTimeout(step, delay);
+        };
+        if (delay === 0) { bikeFixture.forEach((l) => scene.apply(l)); finish(); } else step();
+      }
+      function finish() {
+        if (q.get('explode')) scene.act({ op: 'explode', amount: Number(q.get('explode')) });
+        if (q.get('focus')) scene.act({ op: 'focus', system: q.get('focus') });
+        if (q.get('yaw')) scene.act({ op: 'rotate', y: Number(q.get('yaw')) });
+        setTimeout(() => { desc.textContent = scene.describe(); window.__ready = true; }, 50);
+      }
+      replay(q.get('instant') ? 0 : 60);
+      const acts = {
+        replay: () => replay(60),
+        explode: () => scene.act({ op: 'explode', amount: 1 }),
+        assemble: () => scene.act({ op: 'explode', amount: 0 }),
+        brakes: () => scene.act({ op: 'focus', system: 'brakes' }),
+        unfocus: () => scene.act({ op: 'focus', system: null }),
+        rotate: () => scene.act({ op: 'rotate', y: Math.PI / 4 }),
+        reset: () => scene.act({ op: 'reset' }),
+      };
+      document.getElementById('bar').addEventListener('click', (e) => {
+        const a = e.target.dataset && e.target.dataset.a;
+        if (a) { acts[a](); setTimeout(() => (desc.textContent = scene.describe()), 400); }
+      });
+    </script>
+  </body>
+</html>

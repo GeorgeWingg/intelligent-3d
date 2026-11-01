@@ -1,0 +1,78 @@
+:root {
+  --bg: #111111;
+  --surface: #212121;
+  --composer: #2f2f2f;
+  --panel: rgba(23, 23, 23, 0.9);
+  --line: #3a3a3a;
+  --cream: #ececec;
+  --muted: #8f8f8f;
+  --tan: #ececec;
+  --blue: #cbe6f3;
+  --orange: #e79f66;
+  --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', sans-serif;
+  --serif: var(--sans);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--cream);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 22px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg,
+canvas,
+video {
+  display: block;
+}
+
+#stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+#stage canvas,
+#stage video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+::selection {
+  background: rgba(236, 236, 236, 0.2);
+}

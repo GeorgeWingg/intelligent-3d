@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice dev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0e0f08; --raised:#1d1d14; --composer:#2f2e1e; --text:#e9dec4; --muted:#8b856b; --tan:#d4bf98; --blue:#c6e3ef; --orange:#e9a066; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Newsreader, Georgia, serif; font-size:18px; }
+  main { max-width:680px; margin:0 auto; padding:32px 16px; }
+  h1 { font-weight:500; font-size:28px; margin:0 0 20px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  button { font:inherit; background:var(--composer); color:var(--text); border:1px solid #3d3b28; border-radius:999px; padding:8px 18px; cursor:pointer; }
+  button:hover { border-color:var(--tan); }
+  input { font:inherit; flex:1; min-width:200px; background:var(--raised); color:var(--text); border:1px solid #3d3b28; border-radius:12px; padding:8px 12px; }
+  #state { color:var(--muted); margin-bottom:16px; }
+  #partial { color:var(--muted); font-style:italic; min-height:1.4em; }
+  #log { background:var(--raised); border-radius:14px; padding:14px 16px; min-height:120px; }
+  .you { color:var(--text); } .ai { color:var(--blue); } .sys { color:var(--orange); font-size:15px; }
+  #log p { margin:6px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Voice</h1>
+  <div class="row">
+    <button id="codex">Start realtime</button>
+    <button id="browser">Start browser speech</button>
+    <button id="stop">Stop</button>
+  </div>
+  <div class="row">
+    <input id="text" placeholder="Note to the voice model, or text to speak">
+    <button id="note">Note</button>
+    <button id="say">Say</button>
+  </div>
+  <div id="state">Idle</div>
+  <div id="partial"></div>
+  <div id="log"></div>
+</main>
+<script type="module">
+  import { createVoice } from '/src/voice/index.ts';
+  const $ = id => document.getElementById(id);
+  const log = (cls, text) => { const p = document.createElement('p'); p.className = cls; p.textContent = text; $('log').prepend(p); };
+  const voice = createVoice({
+    onPartial: t => { $('partial').textContent = t; },
+    onFinal: t => { $('partial').textContent = ''; log('you', t); },
+    onAssistant: t => log('ai', t),
+    onState: (s, d) => { $('state').textContent = d ? `${s}: ${d}` : s; window.__voiceStates = [...(window.__voiceStates || []), { s, d }]; },
+  });
+  window.__voice = voice;
+  $('codex').onclick = async () => log('sys', 'Mode: ' + await voice.start('codex').catch(e => e.message));
+  $('browser').onclick = async () => log('sys', 'Mode: ' + await voice.start('browser').catch(e => e.message));
+  $('stop').onclick = () => voice.stop();
+  $('note').onclick = () => { voice.note($('text').value); log('sys', 'Noted'); };
+  $('say').onclick = () => voice.say($('text').value);
+</script>
+</body>
+</html>

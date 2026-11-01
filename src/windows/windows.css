@@ -1,0 +1,93 @@
+.xr-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.xr-window {
+  position: relative;
+  pointer-events: auto;
+  opacity: 0;
+  padding-bottom: 26px; /* room for the grab bar */
+}
+
+.xr-window-body {
+  height: 100%;
+  border-radius: 24px;
+  overflow: hidden;
+  background: rgba(23, 23, 23, 0.94);
+  border: 1px solid #3a3a3a;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+}
+
+/* The chat root normally positions itself; inside a window it just fills the body. */
+.xr-window #chat,
+.xr-window .i3d-in-space {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.xr-grab {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  width: 96px;
+  height: 8px;
+  margin-left: -48px;
+  border-radius: 4px;
+  background: rgba(236, 236, 236, 0.22);
+  cursor: grab;
+  transition: background 160ms, transform 160ms;
+}
+.xr-grab:hover,
+.xr-grab.xr-hover,
+.xr-grab.active {
+  background: rgba(236, 236, 236, 0.5);
+  transform: scaleX(1.12);
+}
+.xr-grab.active { cursor: grabbing; }
+
+.xr-panel {
+  padding: 20px 22px 22px;
+  color: #ececec;
+  font: 400 15px/22px -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', sans-serif;
+}
+.xr-panel h3 {
+  margin: 0 0 8px;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 24px;
+  color: #ececec;
+}
+.xr-panel p {
+  margin: 0;
+  color: #8f8f8f;
+}
+
+.xr-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+}
+.xr-controls button {
+  font: 500 15px/20px -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', sans-serif;
+  color: #ececec;
+  background: #2f2f2f;
+  border: 1px solid #3a3a3a;
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 160ms, transform 120ms;
+}
+.xr-controls button:hover,
+.xr-controls button.xr-hover { background: #3a3a3a; }
+.xr-controls button:active { transform: scale(0.96); }

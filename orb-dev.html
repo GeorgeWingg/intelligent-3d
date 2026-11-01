@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Orb dev</title>
+<style>html,body{margin:0;height:100%;background:#0e0f08}canvas{display:block}</style></head>
+<body><script type="module">
+import * as THREE from 'three';
+import { createOrb } from '/src/orb/index.ts';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(devicePixelRatio); r.setSize(innerWidth, innerHeight); document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); const cam = new THREE.PerspectiveCamera(40, innerWidth/innerHeight, 0.01, 10); cam.position.z = /big/.test(location.search) ? 0.38 : 0.9; // ?big = close-up for shader tuning
+const orb = createOrb(0.12); orb.setVisible(true); scene.add(orb.object);
+let last = performance.now();
+r.setAnimationLoop(t => { const dt = (t-last)/1000; last = t; orb.setLevel(location.hash.includes('talk') ? 0.5+0.5*Math.sin(t/180) : 0); orb.update(dt); r.render(scene, cam); });
+</script></body></html>

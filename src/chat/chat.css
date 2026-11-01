@@ -1,0 +1,608 @@
+.i3d-chat,
+.i3d-mode {
+  --c-bg: #111111;
+  --c-panel: rgba(23, 23, 23, 0.9);
+  --c-composer: #2f2f2f;
+  --c-composer-edge: #3a3a3a;
+  --c-composer-ring: transparent;
+  --c-user: #2f2f2f;
+  --c-line: #3a3a3a;
+  --c-text: #ececec;
+  --c-muted: #8f8f8f;
+  --c-dim: #8f8f8f;
+  --c-placeholder: #8f8f8f;
+  --c-accent: #ffffff;
+  --c-on-accent: #000000;
+  --c-serif: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', sans-serif;
+  --c-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, 'Segoe UI', sans-serif;
+  --c-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Panel: floating translucent right column over the full-screen scene */
+.i3d-chat {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 420px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  background: var(--c-panel);
+  -webkit-backdrop-filter: blur(20px) saturate(1.1);
+  backdrop-filter: blur(20px) saturate(1.1);
+  border: 1px solid var(--c-line);
+  border-radius: 24px;
+  color: var(--c-text);
+  font-family: var(--c-sans);
+  overflow: hidden;
+}
+
+.i3d-chat.is-collapsed {
+  top: auto;
+  background: transparent;
+  border-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow: visible;
+}
+
+.i3d-chat.is-collapsed .i3d-head,
+.i3d-chat.is-collapsed .i3d-scroll {
+  display: none;
+}
+
+.i3d-chat.is-collapsed .i3d-foot {
+  padding: 0;
+}
+
+.i3d-chat.is-collapsed .i3d-composer {
+  background: rgba(47, 47, 47, 0.94);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.i3d-chat:not(.is-collapsed) .i3d-expand {
+  display: none;
+}
+
+/* Header: only the hide control */
+.i3d-head {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+}
+
+.i3d-collapse {
+  color: var(--c-muted);
+}
+
+/* Messages */
+.i3d-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 48px 22px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(236, 236, 236, 0.14) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 40px);
+}
+
+.i3d-log {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 100%;
+  justify-content: flex-end;
+}
+
+.i3d-empty {
+  margin: auto 0 8px;
+  font-size: 22px;
+  line-height: 28px;
+  color: var(--c-text);
+}
+
+.i3d-empty span {
+  display: block;
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--c-muted);
+}
+
+.i3d-user {
+  align-self: flex-end;
+  max-width: 78%;
+  padding: 8px 14px;
+  border-radius: 18px;
+  background: var(--c-user);
+  font-size: 15px;
+  line-height: 22px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  animation: i3d-rise 160ms var(--c-ease) both;
+}
+
+.i3d-turn {
+  animation: i3d-rise 220ms var(--c-ease) both;
+}
+
+.i3d-assistant {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--c-text);
+  overflow-wrap: anywhere;
+}
+
+.i3d-assistant p {
+  margin: 0 0 12px;
+}
+
+.i3d-assistant p:last-child {
+  margin-bottom: 0;
+}
+
+.i3d-assistant strong {
+  font-weight: 600;
+}
+
+.i3d-tok {
+  animation: i3d-fade 180ms ease-out both;
+}
+
+.i3d-meta {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--c-muted);
+  animation: i3d-fade 220ms ease-out both;
+}
+
+/* Footer: peek, status, composer */
+.i3d-foot {
+  padding: 0 10px 10px;
+}
+
+.i3d-peek {
+  display: none;
+}
+
+.i3d-status {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  padding: 0 14px;
+  font-size: 13px;
+  line-height: 18px;
+  transition: height 200ms ease, opacity 200ms ease;
+}
+
+.i3d-status.is-on {
+  height: 28px;
+  opacity: 1;
+}
+
+.i3d-status-text {
+  display: inline-block;
+  background: linear-gradient(90deg, var(--c-muted) 0%, var(--c-muted) 35%, var(--c-text) 50%, var(--c-muted) 65%, var(--c-muted) 100%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: i3d-shimmer 1.8s linear infinite;
+}
+
+/* Composer: two-row rounded rectangle, not a pill */
+.i3d-composer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 108px;
+  border-radius: 26px;
+  background: var(--c-composer);
+  border: 1px solid var(--c-composer-edge);
+  box-shadow: inset 0 0 0 1px var(--c-composer-ring);
+  cursor: text;
+  transition: border-color 160ms;
+}
+
+.i3d-composer:focus-within {
+  border-color: #4a4a4a;
+}
+
+.i3d-input {
+  flex: 1;
+  min-height: 40px;
+  margin: 0;
+  padding: 18px 16px 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--c-text);
+  caret-color: var(--c-text);
+  font-family: var(--c-sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 22px;
+  overflow-y: auto;
+  transition: height 120ms ease;
+}
+
+.i3d-input::placeholder {
+  color: var(--c-placeholder);
+  opacity: 1;
+}
+
+.i3d-composer.is-listening .i3d-input {
+  color: var(--c-dim);
+}
+
+.i3d-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 10px 8px;
+  cursor: default;
+}
+
+.i3d-row-l,
+.i3d-row-r {
+  display: flex;
+  align-items: center;
+}
+
+.i3d-row-r {
+  gap: 4px;
+  min-width: 0;
+}
+
+.i3d-icon {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--c-text);
+  display: grid;
+  place-items: center;
+  transition: background 160ms, color 160ms, opacity 180ms, transform 160ms ease-out;
+}
+
+.i3d-icon:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.i3d-icon:active,
+.i3d-model:active,
+.i3d-peek:active {
+  transform: scale(0.96);
+  transition-duration: 100ms;
+}
+
+.i3d-icon:focus-visible,
+.i3d-model:focus-visible,
+.i3d-peek:focus-visible {
+  outline: 2px solid rgba(236, 236, 236, 0.45);
+  outline-offset: 1px;
+}
+
+.i3d-model {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  height: 32px;
+  margin-right: 6px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text);
+  font-size: 15px;
+  line-height: 20px;
+  white-space: nowrap;
+  transition: color 160ms, transform 160ms ease-out;
+}
+
+.i3d-model span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.i3d-model svg {
+  flex: none;
+}
+
+.i3d-model .i3d-model-effort {
+  margin-left: -1px;
+  color: var(--c-muted);
+}
+
+.i3d-model > svg:last-child {
+  margin-left: -3px;
+  color: var(--c-muted);
+}
+
+.i3d-model:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Speaker shows only in voice mode; widths animate so the row doesn't jump */
+.i3d-voice-only {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transition: width 200ms var(--c-ease), opacity 180ms, background 160ms;
+}
+
+.i3d-composer.is-listening .i3d-voice-only {
+  width: 32px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.i3d-composer.is-listening .i3d-speaker,
+.i3d-composer.is-listening .i3d-mic {
+  color: var(--c-dim);
+}
+
+.i3d-speaker.is-off {
+  opacity: 0.45;
+}
+
+.i3d-mic {
+  margin-right: 4px;
+}
+
+/* Cross-fading icon swaps */
+.i3d-swap,
+.i3d-glyph {
+  grid-area: 1 / 1;
+  transition: opacity 180ms ease, transform 180ms var(--c-ease);
+}
+
+.i3d-swap {
+  display: grid;
+}
+
+.i3d-swap-b,
+.i3d-composer.is-listening .i3d-swap-a {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.i3d-composer.is-listening .i3d-swap-b {
+  opacity: 1;
+  transform: none;
+}
+
+.i3d-composer.is-listening.is-muted .i3d-mic {
+  color: var(--c-text);
+}
+
+.i3d-voice {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.i3d-voice {
+  width: 36px;
+  height: 36px;
+}
+
+.i3d-voice:hover {
+  background: #e3e3e3;
+}
+
+.i3d-g-send,
+.i3d-g-close {
+  opacity: 0;
+  transform: scale(0.8) rotate(-45deg);
+}
+
+.i3d-composer.has-text .i3d-g-wave,
+.i3d-composer.is-listening .i3d-g-wave {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.i3d-composer.has-text .i3d-g-send,
+.i3d-composer.is-listening .i3d-g-close {
+  opacity: 1;
+  transform: none;
+}
+
+/* Collapsed: last assistant reply above the composer, at most 3 lines */
+.i3d-chat.is-collapsed.has-peek .i3d-peek {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: rgba(33, 33, 33, 0.92);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  color: var(--c-text);
+  font-family: var(--c-sans);
+  font-size: 14px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+  animation: i3d-rise 220ms var(--c-ease) both;
+  transition: transform 160ms ease-out;
+}
+
+.i3d-chat.is-collapsed.has-status .i3d-status {
+  margin-bottom: 4px;
+  border-radius: 10px;
+  background: rgba(33, 33, 33, 0.85);
+  width: fit-content;
+}
+
+.i3d-chat.is-collapsed.has-status .i3d-status.is-on {
+  padding-top: 5px;
+}
+
+/* Spatial window: the root is a fixed 440x640 box inside a CSS3DObject.
+   No fixed positioning, no viewport units, no backdrop blur (CSS3D breaks it). */
+.i3d-chat.i3d-in-space {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+  background: rgba(23, 23, 23, 0.94);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border: 1px solid #3a3a3a;
+  border-radius: 24px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.i3d-chat.i3d-in-space.is-collapsed {
+  justify-content: flex-end;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.i3d-chat.i3d-in-space .i3d-composer,
+.i3d-chat.i3d-in-space .i3d-peek {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.i3d-chat.i3d-in-space.is-collapsed .i3d-composer {
+  background: var(--c-composer);
+  box-shadow: inset 0 0 0 1px var(--c-composer-ring), 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.i3d-chat.i3d-in-space.is-collapsed.has-peek .i3d-peek {
+  background: rgba(23, 23, 23, 0.94);
+}
+
+/* Honest mode line */
+.i3d-mode {
+  position: fixed;
+  left: 18px;
+  bottom: 16px;
+  z-index: 15;
+  max-width: calc(100vw - 480px);
+  font-family: var(--c-sans);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--c-muted);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.i3d-mode:empty {
+  display: none;
+}
+
+/* Narrow screens: composer pinned to the bottom; open conversation is a short sheet */
+@media (max-width: 899px) {
+  .i3d-chat:not(.i3d-in-space) {
+    top: auto;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    height: min(52vh, 480px);
+  }
+
+  .i3d-chat.is-collapsed:not(.i3d-in-space) {
+    height: auto;
+  }
+
+  .i3d-chat:not(.i3d-in-space) .i3d-scroll {
+    padding: 44px 16px 12px;
+  }
+
+  .i3d-chat:not(.i3d-in-space) .i3d-foot {
+    padding: 0 8px 8px;
+  }
+
+  .i3d-chat:not(.i3d-in-space) .i3d-composer {
+    min-height: 96px;
+  }
+
+  .i3d-chat:not(.i3d-in-space) .i3d-input {
+    font-size: 16px; /* prevents iOS zoom on focus */
+    padding-top: 14px;
+  }
+
+  .i3d-mode {
+    top: 12px;
+    bottom: auto;
+    left: 14px;
+    max-width: calc(100vw - 28px);
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 420px) {
+  .i3d-model span {
+    max-width: 96px;
+  }
+}
+
+@keyframes i3d-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes i3d-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes i3d-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .i3d-tok,
+  .i3d-user,
+  .i3d-turn,
+  .i3d-meta,
+  .i3d-chat.is-collapsed.has-peek .i3d-peek {
+    animation: i3d-fade 120ms ease-out both;
+  }
+  .i3d-status-text {
+    animation: none;
+    background: none;
+    color: var(--c-muted);
+  }
+}

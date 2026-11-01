@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-01",
+  "backend": "codex app-server 0.146.0, -c model_provider=\"openai\" -c mcp_servers={} -c features.apps=false -c features.plugins=false",
+  "account": "chatgpt",
+  "threadStart": { "model": "gpt-5.6-sol", "modelProvider": "openai", "serviceTier": "ultrafast", "effort": "low", "sandbox": "read-only", "approvalPolicy": "never", "ephemeral": true },
+  "bike": { "prompt": "break down the design of a 7-speed bike", "firstLineMs": 2507, "firstPartMs": 7424, "totalMs": 24575, "lines": 24, "valid": 24, "dropped": 0, "counts": { "say": 2, "assembly": 1, "part": 17, "panel": 2, "controls": 1, "done": 1 } },
+  "followup": { "prompt": "show me the brakes", "firstLineMs": 1169, "totalMs": 2659, "lines": 4, "valid": 4, "dropped": 0, "counts": { "action": 1, "panel": 1, "say": 1, "done": 1 } },
+  "notes": [
+    "gpt-6.1-sol is listed by model/list but rejected for ChatGPT-account Codex: 400 'model is not supported when using Codex with a ChatGPT account'. gpt-6-astra produced no output within 40 s. gpt-5.5 also rejected. gpt-5.6-sol works and is the default (I3D_MODEL env overrides).",
+    "A fresh thread's first turn costs 11-17 s of tool/plugin startup. The server keeps a pre-started spare thread and runs a tiny warm-up turn on it, so real requests are a second turn: ~1.2-2.5 s to first line.",
+    "Back-to-back requests within ~12 s of each other may hit a still-warming spare thread and wait for it."
+  ]
+}

@@ -20,7 +20,7 @@ const NEAR_BOTTOM_PX = 96;
 const NARROW = '(max-width: 899px)';
 const MODEL_LABEL = 'GPT-6.1 Sol';
 const MODEL_EFFORT = 'High';
-const PLACEHOLDER = 'Ask for anything with parts';
+const PLACEHOLDER = 'Ask anything';
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, html?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
@@ -152,7 +152,7 @@ export function createChat(root: HTMLElement): ChatApi & ChatExtras {
   const empty = el(
     'div',
     'i3d-empty',
-    'What should we build?<span>Ask for anything with parts, like a 7-speed bike, and it assembles in the room with you.</span>',
+    'What can I help with?<span>Ask anything. When something is easier to see than to read, it can show you, and you can pull it into the room.</span>',
   );
   log.appendChild(empty);
   scroll.appendChild(log);

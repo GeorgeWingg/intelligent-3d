@@ -98,7 +98,7 @@ export function createFlatCard(): FlatCard {
   const fire = () => { if (!pulled) pulls.forEach(cb => cb()); };
   el.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; });
   el.addEventListener('pointermove', e => {
-    if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 40) { down = null; fire(); }
+    if (down && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 120) { down = null; fire(); }
   });
   el.addEventListener('pointerup', () => { down = null; });
   el.addEventListener('flat-pull', fire); // a pinch that drags out of the window (see windows.pinchMove)

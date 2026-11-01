@@ -154,7 +154,7 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     return { cx: r.left + (x + 1) / 2 * r.width, cy: r.top + (1 - y) / 2 * r.height };
   };
   let dragging: Win | null = null;
-  let pulling: { el: HTMLElement; moved: number } | null = null;
+  let pulling: { el: HTMLElement; dx: number; dy: number } | null = null;
   let hovered: Element | null = null;
 
   return {
@@ -170,7 +170,7 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
       const bar = el.closest('.xr-grab') as HTMLElement | null;
       const flat = el.closest('.flat-card') as HTMLElement | null;
       if (flat) {
-        pulling = { el: flat, moved: 0 };
+        pulling = { el: flat, dx: 0, dy: 0 };
       } else if (bar?.dataset.win) {
         dragging = wins.get(bar.dataset.win) ?? null;
         bar.classList.add('active');
@@ -181,8 +181,9 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
     },
     pinchMove(dx, dy) {
       if (pulling) {
-        pulling.moved += Math.hypot(dx, dy);
-        if (pulling.moved > 0.08) { pulling.el.dispatchEvent(new Event('flat-pull')); pulling = null; }
+        // Net displacement, not path length, so hand jitter while pinching never counts as a pull.
+        pulling.dx += dx; pulling.dy += dy;
+        if (Math.hypot(pulling.dx, pulling.dy) > 0.22) { pulling.el.dispatchEvent(new Event('flat-pull')); pulling = null; }
         return;
       }
       if (dragging) dragBy(dragging, dx, dy);

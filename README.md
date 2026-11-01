@@ -65,7 +65,15 @@ Measured on 1 Nov 2026 on a ChatGPT account:
 | "show me the brakes" follow-up | 1.2 s | 2.7 s | 4 / 0 |
 | Realtime voice session, click to connected | | 3.9 s | WebRTC connected, remote audio |
 
-Raw outputs are in `evidence/`. The app itself was built during the day by several coding agents working in parallel on separate modules (scene compiler, hand tracking, chat, voice, server), all sharing the `src/contract.ts` types.
+Raw outputs are in `evidence/`.
+
+## Tools used to build it
+
+- **Codex** helped throughout the day. It ran the product backend described above, and it was also used to plan the idea and research the app-server and realtime APIs. The earlier Glint prototype that this grew out of was built with it too.
+- **Claude Code** was used alongside Codex to write code. Several agents worked in parallel on separate modules (scene compiler, hand tracking, chat, voice, server), all sharing the `src/contract.ts` types.
+- **Dots** was also used during the day.
+
+All code in this repository was written on 1 November 2026.
 
 ## Architecture
 

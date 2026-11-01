@@ -230,7 +230,6 @@ async function compose(prompt: string) {
       line.t === 'panel' ? spawnPanel(line) : spawnControls(line);
       return;
     }
-    if (line.t === 'action' && !pulledOut) pullOut();
     if (line.t === 'assembly' || line.t === 'part') built = true;
     scene.apply(line);
   };

@@ -8,9 +8,9 @@ import { CodexRPC } from './codex-rpc.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // gpt-6.1-sol is listed but rejected for ChatGPT-account Codex (400 model_not_found); gpt-5.6-sol works.
-export const MODEL = process.env.I3D_MODEL || 'gpt-5.6-sol';
+export const MODEL = process.env.I3D_MODEL || 'gpt-6.1-sol';
 export const EFFORT = process.env.I3D_EFFORT || 'low';
-export const SERVICE_TIER = process.env.I3D_TIER === 'none' ? null : (process.env.I3D_TIER || 'ultrafast');
+export const SERVICE_TIER = process.env.I3D_TIER === 'none' ? null : (process.env.I3D_TIER || 'priority');
 const PROMPT_PATH = join(here, 'prompt.md');
 // Empty cwd so no AGENTS.md or project files get pulled into the context.
 const WORKDIR = join(tmpdir(), 'intelligent-3d-codex');

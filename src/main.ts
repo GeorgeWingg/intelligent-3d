@@ -15,7 +15,7 @@ const stage = document.getElementById('stage')!;
 if (params.has('glasses')) {
   const label = document.createElement('div');
   label.className = 'glasses-label';
-  label.textContent = 'Simulated AR glasses view';
+  label.textContent = 'XREAL Aura view, simulated with an iPhone camera';
   document.body.append(label);
   document.body.classList.add('glasses-on');
 }

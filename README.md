@@ -1,98 +1,90 @@
-# Intelligent 3D, an experiment
+# Intelligent 3D
 
-OpenAI's Intelligent UI idea has the model compose an answer from streamable components instead of plain text. This project tries the same idea in 3D. You chat (or talk) in a floating XR-style window laid over a camera feed. The model streams scene lines (NDJSON, one JSON object per line), and each complete line renders straight away, so an object such as a 7-speed bike assembles part by part while the model is still writing. Hand tracking on the same camera feed lets you rotate, explode and select parts. Follow-ups like "show me the brakes" become actions on the scene that is already there.
+**Intelligent UI, made spatial.** You talk to an assistant in a floating window in AR glasses. When an answer is easier to see than to read, it arrives as a drawing inside the chat. Pinch it and pull, and it leaves the window and stands in the room as a 3D object you can turn, take apart and ask about.
 
-Built at the London Codex hackathon, 1 November 2026.
+The experience is designed around AR glasses such as the **XREAL Aura**. For this demo the wearer's view is simulated: an iPhone camera at eye level supplies the passthrough, and the same feed drives hand tracking. It has not yet been run on the glasses themselves.
 
-## What is live, simulated or replayed
+Built in a day at the London Codex hackathon, 1 November 2026.
 
-| Piece | Status |
+## What it does
+
+- **Chat or talk.** A ChatGPT-style window floats in front of you. Voice runs live through Codex realtime on a ChatGPT subscription, with a labelled browser-speech fallback.
+- **The model decides.** Most replies are plain words. When seeing something helps ("show me how a bike's drivetrain works", "break down the parts of XR glasses"), the model streams a scene description, line by line.
+- **One answer, two forms.** The same stream draws a flat diagram with system tabs inside the chat *and* builds the 3D object. Nothing is pre-made: the model writes the geometry (tubes, wheels, boxes) and the explanations as it goes.
+- **Pull it into the room.** Pinch the drawing and drag it out of the window. The object flies out and settles in the room, with info windows and buttons beside it.
+- **Hands.** Pinch and drag to rotate, pull two hands apart to explode it into its systems, and pinch a system or a button to focus it. Windows slide on an arc around you by their grab bars, and always turn to face you.
+- **Follow-ups act on what is there.** "Show me the brakes" lifts the brakes out and explains them, without regenerating anything.
+
+## Live, simulated or replayed
+
+| | |
 |---|---|
-| Scene composition | **Live.** Codex app-server on the ChatGPT subscription, model `gpt-5.6-sol`, streams scene lines that follow `src/contract.ts`. |
-| Voice | **Live** through Codex app-server realtime (WebRTC, ChatGPT subscription). If that fails, it falls back to the browser's Web Speech recognition and `speechSynthesis`, and the mode line on screen says "Voice: browser speech". |
-| Hand tracking | **Live.** MediaPipe hand landmarker running in the browser on the camera frames. It handles pinch-drag to rotate, two-hand pinch to explode or scale, and point plus pinch to select. |
-| Passthrough | **Simulated.** It is just the camera video drawn behind the 3D scene. There is no world anchoring, no depth and no SLAM. Objects stay fixed to the screen, not to the room. |
-| XR | **Not tested on a headset or glasses.** It runs in a desktop browser only. The "floating window" is a 2D/3D layout in the page. |
-| Replay | `?replay=bike` plays a pre-built bike fixture (`src/scene/bike-fixture.ts`) through the same renderer. **No model is called.** The mode line says "Replay: pre-built bike, no model". Use it as an offline fallback and as a visual reference for what model output should look like. |
+| Scene composition | **Live.** Codex app-server on a ChatGPT subscription (`gpt-6.1-sol`, fast tier) streams NDJSON lines that follow `src/contract.ts`. |
+| Voice | **Live.** Codex app-server realtime over WebRTC on the same subscription. If that fails, the browser's Web Speech API takes over, and the on-screen label says so. |
+| Hand tracking | **Live.** MediaPipe hand landmarker in the browser, on the camera feed. |
+| Glasses view | **Simulated.** The camera video is drawn behind the scene (unmirrored for an outward-facing iPhone, labelled "POV"). There is no world anchoring or depth sensing, so objects stay fixed to the view rather than the room. `?room=virtual` swaps the passthrough for a virtual room, and the camera then drives the hands only. |
+| Replay | `?replay=bike` plays a pre-built bike through the same renderer **without calling the model**, and the label says so. It is the offline fallback. |
 
-## Setup
+## Run it
 
-You need:
-
-- macOS with Chrome. Tested on a Mac with an iPhone as Continuity Camera.
-- Node 22.
-- Codex CLI installed and logged in with a ChatGPT account (`codex login`). The server runs `codex` from your `PATH`. Set `CODEX_BIN` to use a different binary.
+You need macOS, Chrome, Node 22, and the Codex CLI (0.166 or newer) logged in with a ChatGPT account (`codex login`).
 
 ```sh
 npm install
-node scripts/copy-mediapipe.mjs   # copies the MediaPipe wasm runtime into public/mediapipe-wasm
+node scripts/copy-mediapipe.mjs   # MediaPipe wasm runtime -> public/mediapipe-wasm
 npm run build
 node server/index.mjs             # http://127.0.0.1:4320
 ```
 
-Open http://127.0.0.1:4320 and allow camera and microphone access.
+For development, run `node server/index.mjs` and `npx vite --port 5320` together; Vite proxies `/api` to 4320.
 
-The hand model goes in `public/models/hand_landmarker.task`. If it is missing, download it:
+**Camera.** An iPhone connected as a Continuity Camera is picked automatically. If Chrome only lists the built-in webcam, turn off any VPN: it blocks Continuity Camera. `?cam=<name>` picks a camera by label, `?pov=1|0` forces the POV/mirror mode, `?glasses=1` shows the view label, and `?nocam` runs without a camera (mouse only).
+
+If `public/models/hand_landmarker.task` is missing:
 
 ```sh
-mkdir -p public/models
 curl -L -o public/models/hand_landmarker.task \
   https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
 ```
 
-Dev mode with hot reload: run `node server/index.mjs` in one terminal and `npx vite --port 5320` in another, then open http://127.0.0.1:5320. Vite sends `/api` requests to the server on port 4320.
-
-You can change the model, effort and service tier with environment variables: `I3D_MODEL` (default `gpt-5.6-sol`), `I3D_EFFORT` (default `low`) and `I3D_TIER` (default `ultrafast`, `none` to turn it off).
-
-### Camera
-
-If an iPhone is available as a Continuity Camera (wireless, or over USB-C), the app picks it automatically. Otherwise it uses the default camera. The mode line at the bottom shows which camera, hand tracking and voice mode are active.
+**Controls.** Mouse: drag the object to rotate it, scroll to explode it, drag a window by its grab bar, and drag the drawing out of the chat. Keyboard: W/A/S/D to walk, Q/E to go down or up, right-drag to look around, R to reset.
 
 ## How Codex was used
 
-At runtime, Codex is the backend:
+**Codex is the runtime, not just the dev tool.**
 
-- **Scene composition.** `server/codex-rpc.mjs` keeps one warm `codex app-server` process and talks JSON-RPC to it over stdio. It always passes `-c model_provider="openai"` so requests run on the ChatGPT subscription, not an API key (the server also removes `OPENAI_API_KEY` from the child process's environment). Threads are ephemeral, read-only, `approvalPolicy: never`, and use the system prompt in `server/prompt.md`. The server refuses every approval request.
-- **Realtime voice.** `server/voice.mjs` starts a second app-server with `features.realtime_conversation=true` and passes the browser's WebRTC offer and answer through `thread/realtime/*`. After each build, a short text description of the scene is pushed into the voice session so that it can talk about what is on screen.
+- **Scene composition.** `server/codex-rpc.mjs` keeps a warm `codex app-server` and talks JSON-RPC to it over stdio, with `-c model_provider="openai"` so it runs on the ChatGPT subscription (no API key; `OPENAI_API_KEY` is removed from the child's environment). Threads are ephemeral and read-only, use `approvalPolicy: never`, and take their instructions from `server/prompt.md`. A spare thread is pre-warmed so that each request skips the 11–17 s first-turn start-up.
+- **Realtime voice.** `server/voice.mjs` runs a second app-server with `features.realtime_conversation=true` and passes the browser's WebRTC offer and answer through `thread/realtime/*` (protocol v3). After each build, a description of what is on screen is pushed into the voice session, so the voice can talk about it.
 
-Measured on 1 Nov 2026 with codex app-server 0.146.0 on a ChatGPT account (`evidence/compose-timing.json`, `evidence/voice-realtime.json`):
+Measured on 1 Nov 2026 on a ChatGPT account:
 
-| Request | First line | First part | Total | Lines (valid / dropped) |
-|---|---|---|---|---|
-| "break down the design of a 7-speed bike" | 2.5 s | 7.4 s | 24.6 s | 24 / 0 (17 parts, 2 panels, 1 control row) |
-| "show me the brakes" (follow-up) | 1.2 s | n/a | 2.7 s | 4 / 0 |
-| Realtime voice session start | | | 7.8 s to listening | WebRTC connected, remote audio present |
+| Request | First line | Done | Lines valid / dropped |
+|---|---|---|---|
+| "break down the design of a 7-speed bike" (gpt-6.1-sol, Codex 0.166) | 4.7 s | 33.0 s | 26 / 0 |
+| same, gpt-5.6-sol (Codex 0.146) | 2.5 s | 24.6 s | 24 / 0 |
+| "show me the brakes" follow-up | 1.2 s | 2.7 s | 4 / 0 |
+| Realtime voice session, click to connected | | 3.9 s | WebRTC connected, remote audio |
 
-A new thread's first turn spends 11 to 17 s starting up, so the server keeps a spare thread that has already run a warm-up turn. A real request then lands on that thread's second turn. `gpt-6.1-sol` and `gpt-5.5` were rejected for ChatGPT-account Codex, which is why the default is `gpt-5.6-sol`.
-
-During development, the app was built by several coding agents working in parallel on separate modules (scene compiler, hand tracking, chat surface, voice, orb, server), all sharing the `src/contract.ts` types.
+Raw outputs are in `evidence/`. The app itself was built during the day by several coding agents working in parallel on separate modules (scene compiler, hand tracking, chat, voice, server), all sharing the `src/contract.ts` types.
 
 ## Architecture
 
 ```
- iPhone camera ──► <video> (passthrough background)
-        │                 │
-        │                 └─► MediaPipe hands ──► gestures ──┐
-        ▼                                                    ▼
-  chat / voice ──► POST /api/compose ──► server/index.mjs   three.js scene
-                                            │                ▲
-                                            ▼                │ NDJSON SpecLines
-                                codex app-server (stdio)  ───┘ (assembly, part,
-                                model_provider=openai          panel, controls,
-                                gpt-5.6-sol, ChatGPT sub       action, say, done)
+ iPhone camera ─► passthrough background ─► MediaPipe hands ─► gestures ─┐
+                                                                          ▼
+ chat / voice ─► POST /api/compose ─► codex app-server ─► NDJSON lines ─► flat drawing in chat
+                  (server/index.mjs)   gpt-6.1-sol,                       └► 3D object, info windows,
+                                       ChatGPT subscription                  buttons (pull out)
 
-  voice: browser WebRTC ◄──► server/voice.mjs ◄──► codex app-server thread/realtime
-         fallback: Web Speech + speechSynthesis
+ voice: browser WebRTC ◄─► server/voice.mjs ◄─► codex app-server thread/realtime
 ```
 
 ## Limitations
 
-- The passthrough is not AR. Objects do not track the room, and nothing has been tried on a headset or glasses.
-- Everything is built from primitives (tubes, cylinders, tori, boxes, spheres). Models are rough and the quality depends on the prompt.
-- A full build takes about 25 s. The first part shows up after about 7 s.
-- If you send requests within about 12 s of each other, the second one can land on a spare thread that is still warming up and has to wait.
-- Realtime voice uses an experimental app-server API (`thread/realtime/*`, `experimentalApi: true`), which may change between Codex versions.
-- Hand tracking runs on the CPU from a single RGB camera. It loses track in low light and when hands overlap.
-- Local only. The server binds to 127.0.0.1 and has no authentication.
+- Not yet run on XREAL Aura or any other glasses. Objects follow the view, not the room.
+- Geometry is built from primitives, so objects are recognisable diagrams rather than detailed models. A full build takes 25–35 s.
+- Realtime voice uses an experimental app-server API and can be rough: echo without headphones, and occasional slow starts.
+- Hand tracking uses a single RGB camera and struggles in low light or when hands overlap.
+- Local only: the server binds to 127.0.0.1 with no authentication.
 
-See `CREDITS.md` for third-party work and attribution.
+Inspired by OpenAI's "GPT-6 and Intelligent UI" announcement; not affiliated with OpenAI or XREAL. See `CREDITS.md`.

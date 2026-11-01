@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORBIT — a kinetic sculpture</title>
+<style>
+*{box-sizing:border-box}body{margin:0;overflow:hidden;background:#05080e;color:#e8edf5;font-family:Arial,Helvetica,sans-serif}canvas{display:block;width:100%;height:100%;touch-action:none}header{position:absolute;top:38px;left:42px;pointer-events:none}h1{margin:0;font-size:clamp(40px,7vw,88px);font-weight:400;letter-spacing:-.075em;line-height:1}header p{font:10px monospace;letter-spacing:.22em;color:#7d91ad;margin-top:18px}.edition{position:absolute;right:42px;top:42px;font:10px monospace;letter-spacing:.15em;color:#8da3bc}.edition i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#9ae5ff;margin-right:10px;box-shadow:0 0 14px #79d5ff}footer{position:absolute;bottom:34px;left:42px;right:42px;display:flex;align-items:end;justify-content:space-between;gap:20px}.caption{font:11px/1.8 monospace;color:#91a4bd}.caption strong{display:block;color:#e0e9f4;font-weight:400;font-size:12px}.controls{display:flex;gap:8px}button{cursor:pointer;border:1px solid #354659;background:#0b1420aa;color:#dcecff;padding:13px 18px;border-radius:30px;font:11px monospace;backdrop-filter:blur(16px);transition:background .2s,border-color .2s}button:hover,button:focus-visible{background:#19354c;border-color:#a4dcff;outline:none}button[aria-pressed=true]{border-color:#a4dcff;background:#16334b}.hint{position:absolute;left:50%;top:50%;transform:translate(-50%,170px);pointer-events:none;font:10px monospace;letter-spacing:.15em;color:#8094ac;animation:appear 2s both}.error{position:fixed;inset:35%;font:16px/1.6 monospace;color:white}@keyframes appear{from{opacity:0}to{opacity:1}}header,footer,.edition{animation:appear 1.5s both}@media(max-width:600px){header{top:26px;left:24px}.edition{right:24px;top:30px;font-size:8px}footer{left:24px;right:24px;bottom:24px;align-items:start;flex-direction:column}.caption{font-size:10px}.controls{width:100%}button{flex:1;padding:12px 10px}.hint{display:none}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+</head>
+<body>
+<header><h1>ORBIT</h1><p>A KINETIC SCULPTURE</p></header>
+<div class="edition"><i></i>EXPERIMENT 001</div>
+<div class="hint">DRAG TO EXPLORE · SCROLL TO ZOOM</div>
+<footer><div class="caption"><strong>A small machine for bending light.</strong>Drag to orbit. Touch the pulse to wake it up.</div><div class="controls"><button id="pulse">↗ Pulse</button><button id="palette">◐ Solar</button><button id="pause" aria-pressed="false">Ⅱ Pause</button></div></footer>
+<script type="module" src="./sculpture.js"></script>
+</body></html>

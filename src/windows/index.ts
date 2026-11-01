@@ -50,7 +50,8 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
 
   // Gentle head-motion parallax from the pointer or the hand, so depth reads in a flat recording.
   const look = { x: 0, y: 0, tx: 0, ty: 0 };
-  window.addEventListener('pointermove', e => {
+  const sway = new URLSearchParams(location.search).has('sway');
+  if (sway) window.addEventListener('pointermove', e => {
     look.tx = (e.clientX / innerWidth) * 2 - 1;
     look.ty = (e.clientY / innerHeight) * 2 - 1;
   });
@@ -174,8 +175,7 @@ export function createWindows(stage: HTMLElement, scene: SceneApiExt): Windows {
       const { cx, cy } = toClient(x, y);
       const el = document.elementFromPoint(cx, cy)?.closest('.xr-grab, button');
       if (el) { el.classList.add('xr-hover'); hovered = el; }
-      look.tx = x * 0.6;
-      look.ty = -y * 0.4;
+      if (sway) { look.tx = x * 0.6; look.ty = -y * 0.4; }
     },
   };
 }

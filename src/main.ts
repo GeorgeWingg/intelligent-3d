@@ -50,8 +50,14 @@ async function openCamera(): Promise<HTMLVideoElement | null> {
 }
 
 const video = await openCamera();
+// POV: an outward-facing camera (iPhone held or mounted at eye level) is shown unmirrored, like looking
+// through glasses. A selfie webcam is mirrored. ?pov=1 / ?pov=0 overrides.
+const camLabel = (video?.srcObject as MediaStream | null)?.getVideoTracks()[0]?.label ?? '';
+const pov = params.has('pov') ? params.get('pov') !== '0' : /iphone/i.test(camLabel);
+const mirror = !pov;
+if (video) mode.camera += pov ? ' (POV)' : ' (mirrored)';
 showMode();
-const scene = createScene(stage, { video: video ?? undefined, mirror: true });
+const scene = createScene(stage, { video: video ?? undefined, mirror });
 
 // The chat is the main window, floating front-left; everything the model makes spawns out of it.
 const windows = createWindows(stage, scene);
@@ -147,7 +153,7 @@ if (video) {
         break;
     }
   };
-  const hands = createHands(video, onHand, { mirror: true, overlay });
+  const hands = createHands(video, onHand, { mirror, overlay });
   hands.start().then(
     () => { mode.hands = 'Hand tracking: MediaPipe on camera'; showMode(); },
     () => { mode.hands = 'Hand tracking unavailable'; showMode(); },
@@ -189,7 +195,7 @@ async function compose(prompt: string) {
   chat.addUser(prompt);
   history.push({ role: 'user', text: prompt });
   const reply = chat.startAssistant();
-  chat.setStatus('Building in 3D…');
+  chat.setStatus('Thinking…');
   const started = performance.now();
   let said = '';
   let built = false;
@@ -202,7 +208,7 @@ async function compose(prompt: string) {
       return;
     }
     if (line.t === 'done') return;
-    if (line.t === 'assembly') { clearPanels(); newCard(); }
+    if (line.t === 'assembly') { clearPanels(); newCard(); chat.setStatus(`Drawing ${line.title.toLowerCase()}…`); }
     if (line.t === 'clear') clearPanels();
     if (line.t === 'assembly' || line.t === 'part') card?.apply(line);
     if (line.t === 'panel' || line.t === 'controls') {
@@ -247,7 +253,8 @@ async function compose(prompt: string) {
       inflight = null;
       chat.setStatus(null);
       const secs = ((performance.now() - started) / 1000).toFixed(1);
-      reply.done(built ? `Built in 3D in ${secs}s${mode.replay ? ' (replay)' : ''}` : `${secs}s`);
+      reply.done();
+      console.info(`[compose] ${secs}s${built ? ' (object)' : ''}${mode.replay ? ' replay' : ''}`);
       if (said) history.push({ role: 'assistant', text: said });
       if (voice.mode === 'codex') voice.note(`What is on screen now: ${scene.describe()}`);
     }

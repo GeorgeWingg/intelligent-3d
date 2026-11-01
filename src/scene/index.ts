@@ -19,6 +19,8 @@ export interface SceneApiExt extends SceneApi {
   // Add a world-space object (e.g. the voice orb) with an optional per-frame tick.
   attach(object: THREE.Object3D, tick?: (dt: number) => void): void;
   readonly camera: THREE.PerspectiveCamera;
+  // Hide the object (it lives flat in the chat), or fly it out from a world point into the room.
+  setPresent(on: boolean, from?: THREE.Vector3): void;
   readonly home: { position: THREE.Vector3; target: THREE.Vector3 };
   dispose(): void;
 }
@@ -779,6 +781,14 @@ export function createScene(container: HTMLElement, opts: SceneOptions = {}): Sc
     last = now;
     const k = 1 - Math.exp(-dt * 9);
     const kSlow = 1 - Math.exp(-dt * 6);
+    if (present.on && present.t < 1) {
+      present.t = Math.min(1, present.t + dt / 0.9);
+      const e = 1 - Math.pow(1 - present.t, 3);
+      const over = 1 + Math.sin(present.t * Math.PI) * 0.08;
+      stage.position.lerpVectors(present.from, STAGE_POS, e);
+      stage.scale.set(0.08 + 0.92 * e * over, 0.08 + 0.92 * e * over, (0.02 + 0.98 * e) * over);
+    }
+    stage.visible = present.on;
     st.yaw += (st.yawT - st.yaw) * k;
     st.pitch += (st.pitchT - st.pitch) * k;
     st.scale += (st.scaleT - st.scale) * k;
@@ -844,6 +854,15 @@ export function createScene(container: HTMLElement, opts: SceneOptions = {}): Sc
     css.render(scene, camera);
   }
   const ticks: ((dt: number) => void)[] = [];
+  const present = { on: true, t: 1, from: STAGE_POS.clone() };
+  function setPresent(on: boolean, from?: THREE.Vector3) {
+    present.on = on;
+    if (on) {
+      present.t = from ? 0 : 1;
+      present.from.copy(from ?? STAGE_POS);
+      if (!from) { stage.position.copy(STAGE_POS); stage.scale.setScalar(1); }
+    }
+  }
   function attach(object: THREE.Object3D, tick?: (dt: number) => void) {
     scene.add(object);
     if (tick) ticks.push(tick);
@@ -869,7 +888,7 @@ export function createScene(container: HTMLElement, opts: SceneOptions = {}): Sc
     css.domElement.remove();
   }
 
-  const api: SceneApiExt = { apply, act, clear, pick, hover, rotateBy, explodeBy, scaleBy, describe, press, attach, dispose, camera, home: { position: CAM_POS.clone(), target: LOOK_AT.clone() } };
+  const api: SceneApiExt = { apply, act, clear, pick, hover, rotateBy, explodeBy, scaleBy, describe, press, attach, dispose, camera, setPresent, home: { position: CAM_POS.clone(), target: LOOK_AT.clone() } };
   // Handy for debugging from the console and for headless checks.
   (window as unknown as { __scene?: SceneApiExt }).__scene = api;
   return api;

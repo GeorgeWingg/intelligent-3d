@@ -8,6 +8,7 @@ import { createChat, setModeLine } from './chat';
 import { createVoice } from './voice';
 import { createOrb } from './orb';
 import { createWindows } from './windows';
+import { createFlatCard, type FlatCard } from './flat';
 import * as THREE from 'three';
 
 const params = new URLSearchParams(location.search);
@@ -22,16 +23,16 @@ const showMode = () =>
 async function openCamera(): Promise<HTMLVideoElement | null> {
   if (params.has('nocam') || !navigator.mediaDevices?.getUserMedia) return null;
   try {
-    let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const phone = devices.find(d => d.kind === 'videoinput' && /iphone/i.test(d.label));
-    const current = stream.getVideoTracks()[0]?.getSettings().deviceId;
-    if (phone && phone.deviceId !== current) {
-      stream.getTracks().forEach(t => t.stop());
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: phone.deviceId }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-        audio: false,
-      });
+    // Ask once so device labels become visible, then switch to the iPhone if it is listed.
+    const probe = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    const devices = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    console.info('[camera] devices:', devices.map(d => d.label));
+    const want = params.get('cam');
+    const pick = devices.find(d => want ? d.label.toLowerCase().includes(want.toLowerCase()) : /iphone/i.test(d.label));
+    let stream = probe;
+    if (pick && pick.deviceId !== probe.getVideoTracks()[0]?.getSettings().deviceId) {
+      probe.getTracks().forEach(t => t.stop());
+      stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: pick.deviceId } }, audio: false });
     }
     const video = document.createElement('video');
     video.muted = true;
@@ -39,9 +40,11 @@ async function openCamera(): Promise<HTMLVideoElement | null> {
     video.srcObject = stream;
     await video.play();
     const label = stream.getVideoTracks()[0]?.label || 'camera';
-    mode.camera = `Simulated passthrough: ${/iphone/i.test(label) ? 'iPhone camera' : label}`;
+    mode.camera = `Simulated passthrough: ${/iphone/i.test(label) ? 'iPhone camera' : label}${pick ? '' : ` (no iPhone among ${devices.length} cameras)`}`;
     return video;
-  } catch {
+  } catch (err) {
+    mode.camera = `Camera error: ${(err as Error).name} ${(err as Error).message}`;
+    console.error('[camera]', err);
     return null;
   }
 }
@@ -55,15 +58,15 @@ const windows = createWindows(stage, scene);
 // Look slightly left so the chat window sits in view and the object sits right of centre.
 scene.home.position.x -= 0.32;
 scene.home.target.x -= 0.32;
-const CHAT_POS = new THREE.Vector3(-0.92, 1.18, 0.7);
+const CHAT_POS = new THREE.Vector3(-0.84, 1.2, 1.0);
 const chatEl = document.getElementById('chat')!;
 chatEl.classList.add('i3d-in-space');
 windows.add(chatEl, { id: 'chat', position: CHAT_POS, yaw: 0.34, width: 440, height: 620 });
 
 // Model panels become their own windows, parked in an arc to the right of the object.
 const SLOTS = [
-  { p: new THREE.Vector3(0.42, 1.5, 0.7), yaw: -0.3 },
-  { p: new THREE.Vector3(0.48, 1.06, 0.8), yaw: -0.34 },
+  { p: new THREE.Vector3(0.36, 1.48, 0.95), yaw: -0.3 },
+  { p: new THREE.Vector3(0.42, 1.08, 1.0), yaw: -0.34 },
   { p: new THREE.Vector3(-0.15, 1.72, 0.4), yaw: 0 },
   { p: new THREE.Vector3(0.45, 0.7, 0.85), yaw: -0.34 },
 ];
@@ -151,6 +154,30 @@ if (video) {
   );
 }
 
+// One answer, two forms: each new object first lands flat in the chat; pulling it out flies it into the room.
+let card: FlatCard | null = null;
+let pulledOut = true;
+let deferred: SpecLine[] = [];
+function pullOut() {
+  if (pulledOut) return;
+  pulledOut = true;
+  card?.setPulled(true);
+  scene.setPresent(true, CHAT_POS.clone().add(new THREE.Vector3(0.05, -0.05, 0.1)));
+  const queued = deferred;
+  deferred = [];
+  setTimeout(() => queued.forEach(l => l.t === 'panel' ? spawnPanel(l) : l.t === 'controls' ? spawnControls(l) : null), 600);
+  if (voice.mode === 'codex') voice.note('The user pulled the object out of the chat into the room.');
+}
+function newCard() {
+  card = createFlatCard();
+  card.onPull(pullOut);
+  const turns = chatEl.querySelectorAll('.i3d-turn');
+  (turns[turns.length - 1] ?? chatEl.querySelector('.i3d-log'))?.appendChild(card.el);
+  pulledOut = false;
+  deferred = [];
+  scene.setPresent(false);
+}
+
 // Composition: stream SpecLines from the model and render each as it arrives.
 const history: { role: 'user' | 'assistant'; text: string }[] = [];
 let inflight: AbortController | null = null;
@@ -175,9 +202,15 @@ async function compose(prompt: string) {
       return;
     }
     if (line.t === 'done') return;
-    if (line.t === 'panel') { spawnPanel(line); return; }
-    if (line.t === 'controls') { spawnControls(line); return; }
-    if (line.t === 'assembly' || line.t === 'clear') clearPanels();
+    if (line.t === 'assembly') { clearPanels(); newCard(); }
+    if (line.t === 'clear') clearPanels();
+    if (line.t === 'assembly' || line.t === 'part') card?.apply(line);
+    if (line.t === 'panel' || line.t === 'controls') {
+      if (!pulledOut) { deferred.push(line); return; }
+      line.t === 'panel' ? spawnPanel(line) : spawnControls(line);
+      return;
+    }
+    if (line.t === 'action' && !pulledOut) pullOut();
     if (line.t === 'assembly' || line.t === 'part') built = true;
     scene.apply(line);
   };

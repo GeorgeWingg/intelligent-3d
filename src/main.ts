@@ -55,7 +55,8 @@ async function openCamera(): Promise<HTMLVideoElement | null> {
   }
 }
 
-const video = await openCamera();
+// Never let a busy or stalled camera block the app: give up after 8 s and run without passthrough.
+const video = await Promise.race([openCamera(), new Promise<null>(r => setTimeout(() => { mode.camera = 'Camera timed out'; r(null); }, 8000))]);
 // POV: an outward-facing camera (iPhone held or mounted at eye level) is shown unmirrored, like looking
 // through glasses. A selfie webcam is mirrored. ?pov=1 / ?pov=0 overrides.
 const camLabel = (video?.srcObject as MediaStream | null)?.getVideoTracks()[0]?.label ?? '';

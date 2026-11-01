@@ -10,7 +10,7 @@
 
 ## Shader references
 
-- The voice orb is an original implementation inspired by the technique in nimitz's "Protean clouds" (Shadertoy 3l23Rh): a deformed periodic-grid noise volume, density-adaptive step size and a camera moving forward through a soft tunnel. No code from that shader is used.
+- The voice orb (`src/orb`, not shown in the final build) is an original implementation inspired by the technique in nimitz's "Protean clouds" (Shadertoy 3l23Rh): a deformed periodic-grid noise volume, density-adaptive step size and a camera moving forward through a soft tunnel. No code from that shader is used.
 - An earlier version of the orb was adapted from Liam Egan's 2018 domain-warped fbm CodePen, which uses Inigo Quilez's value noise.
 
 ## Ideas
